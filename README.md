@@ -15,22 +15,7 @@ Note that unless you are collaborating with other folks, you will probably just 
 
 For **visual overview** with more details, you can read [the overview](Joplin%20Git/Visual%20Overview.md)
 
-### Word of Caution for those with Joplin Terminal Installed (Along with Joplin Desktop)
-
-Joplin Desktop stores it's data in **$HOME/.config/joplin-desktop**.  On the other hand - Joplin Terminal sotres its data in **$HOME/.config/joplin**.  These folders are the corresponding profile directories for the two apps.
-
-This makes sense - running two different apps simultaneously could potentially cause issues.
-
-However, I took the easy way out (I primarily use Joplin Desktop - Joplin Terminal just for sync)
-
-```bash
-mv ~/.config/joplin ~/.config/joplin.bak
-ln -s ~/.config/joplin-desktop ~/.config/joplin
-```
-
-At this point - everything works well with the scripts.
-
-## The scripts you want to use
+## The scripts you want to use (run from root of repository)
 
 - bin
   - **update_repository_from_joplin.sh** - you will most likely want to use this script most often.  Run from the base of your repository
