@@ -4,7 +4,7 @@ type joplin > /dev/null 2>&1 || { echo "joplin terminal not installed, please im
 
 # You don't really have to touch this unless you need to add a directory to the root of the repository
 # and that directory is not a Joplin notebook
-NOT_NOTEBOOK_DIRS=("." ".git" "bin");
+NOT_NOTEBOOK_DIRS=("." ".git" "bin" "_resources");
 
 #########################################################################################
 ################## You should not have to modify below this line ########################
