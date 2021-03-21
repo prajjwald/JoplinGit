@@ -31,7 +31,6 @@ import_notebook() {
     joplin import --format md "${NOTEBOOK}";
 }
 
-for NOTEBOOK in "${NOTEBOOK_LIST[@]}";
 find . -maxdepth 1 -type d ! \( ${FIND_EXCLUDE_DIRS} \)| sed 's| |\\ |g' |xargs -i basename {} | while read NOTEBOOK;
 do
     import_notebook "${NOTEBOOK}";
