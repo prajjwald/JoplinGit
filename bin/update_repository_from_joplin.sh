@@ -1,18 +1,21 @@
 #!/bin/bash
 
-# Make sure you have joplin terminal installed in order to use terminal auto-export
-# You can see examples in the comments below
-NOTEBOOK_LIST=("Joplin Git");
-
-# To Skip auto-export (e.g. if you don't have joplin terminal installed, uncomment line below
-# NOTEBOOK_LIST=()
-
-# Example to export two Joplin notebooks
-# NOTEBOOK_LIST=("Notebook 1" "Notebook 2");
+# You don't really have to touch this unless you need to add a directory to the root of the repository
+# and that directory is not a Joplin notebook
+NOT_NOTEBOOK_DIRS=("." ".git" "bin");
 
 #########################################################################################
 ################## You should not have to modify below this line ########################
 #########################################################################################
+
+FIND_EXCLUDE_DIRS="";
+
+JOINSTRING="";
+for dir in "${NOT_NOTEBOOK_DIRS[@]}";
+do
+    FIND_EXCLUDE_DIRS="${FIND_EXCLUDE_DIRS} ${JOINSTRING} -name $dir"
+    JOINSTRING="-o";
+done
 
 export_notebook() {
     
@@ -27,6 +30,14 @@ export_notebook() {
         joplin export --format md --notebook "$1" "${EXPORT_DIR}" || echo "joplin terminal not installed, please export manually";
     )
 
+}
+
+export_all_notebooks() {
+    type joplin > /dev/null 2>&1 || { echo "skipping auto-export of $1, joplin terminal not installed.  Please export manually"; return; }
+    find . -maxdepth 1 -type d ! \( ${FIND_EXCLUDE_DIRS} \)| sed 's| |\\ |g' |xargs -i basename {} | while read notebook;
+    do
+        export_notebook "$notebook";
+    done
 }
 
 update_exported_files() {
@@ -53,10 +64,7 @@ delete_orphaned_resources() {
 
 }
 
-for NOTEBOOK in "${NOTEBOOK_LIST[@]}";
-do
-    export_notebook "${NOTEBOOK}";
-done
+export_all_notebooks;
 
 # Move new entries created by export (1), (2), ... - this script assumes you only have one export in flight
 # anything with more than one simultaneous entry should be manually checked for file completeness
