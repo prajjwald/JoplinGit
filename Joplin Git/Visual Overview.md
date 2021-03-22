@@ -27,6 +27,7 @@ ln -s joplin-desktop joplin;
 
 ![singleUserNoJoplinTerminal.svg](../_resources/f34e129856474b7f9ca742cd494960ef.svg)
 
+
 # With Collaborators
 
 - Refer to the export part of the workflow in diagrams above
