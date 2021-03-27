@@ -1,12 +1,34 @@
 #!/bin/bash
 
-# You don't really have to touch this unless you need to add a directory to the root of the repository
-# and that directory is not a Joplin notebook
-NOT_NOTEBOOK_DIRS=("." ".git" "bin" "_resources");
+COMMIT_MESSAGE="Update from Joplin Export";
+BIN_DIR=$(dirname $0);
 
-#########################################################################################
-################## You should not have to modify below this line ########################
-#########################################################################################
+optstring="m:h";
+
+usage() {
+    cat << EOF 2>&1
+Usage: $(basename $0) [-h] [-m commit message]
+    -h: show this help message
+    -m: Custom git commit message
+EOF
+    exit;
+}
+
+while getopts ${optstring} arg;
+do
+    case ${arg} in
+    h)
+        usage
+        ;;
+    m)
+        COMMIT_MESSAGE="${OPTARG}"
+        ;;
+    ?)
+        usage;;
+    esac
+done
+
+source ${BIN_DIR}/config.sh
 
 FIND_EXCLUDE_DIRS="";
 
@@ -24,11 +46,23 @@ export_notebook() {
 
     echo "Will attempt to export notebook ${NOTEBOOK}";
 
-    ( 
-# Joplin terminal has a weird bug where it creates mysterious, blank, ' (1)'... folders if you run from the destination folder.  Go one step up.  Using subshell to simplify this
-        cd ..;
-        joplin export --format md --notebook "$1" "${EXPORT_DIR}" || echo "joplin terminal not installed, please export manually";
-    )
+    notebook_prefix_path=${paths["$NOTEBOOK"]};
+
+    if [ ! -z "${notebook_prefix_path}" ];
+    then
+        echo "Re-arranging ${NOTEBOOK} for Joplin import";
+        mkdir -p "${notebook_prefix_path}";
+        mv "${NOTEBOOK}" "${notebook_prefix_path}";
+    fi
+
+    joplin export --format md --notebook "$1" "${EXPORT_DIR}" || echo "joplin terminal not installed, please export manually";
+
+    if [ ! -z "${notebook_prefix_path}" ];
+    then
+        echo "Moving ${NOTEBOOK} back to original location";
+        mv "${notebook_prefix_path}/${NOTEBOOK}" .;
+        rm -rf "${notebook_prefix_path}";
+    fi
 
 }
 
@@ -64,13 +98,26 @@ delete_orphaned_resources() {
 
 }
 
+# exporting notebooks often create empty folders with the name ' (1)' in the notebook directory.
+# for top level notebooks - this is not a problem if you go one directory up (weird joplin export bug)
+# However, the workaround doesn't seem to prevent zombie creation for subnotebooks
+# Hence the nuclear option of manually cleaning them up after export
+cleanup_joplin_export_zombie_folders() {
+    echo "Cleaning up stray directories from export"
+    find . -type d -empty -name ' (1)' | while read zombie_dir;
+    do
+        rm -rf "${zombie_dir}";
+    done
+}
+
 export_all_notebooks;
 
 # Move new entries created by export (1), (2), ... - this script assumes you only have one export in flight
 # anything with more than one simultaneous entry should be manually checked for file completeness
 update_exported_files;
 delete_orphaned_resources;
+cleanup_joplin_export_zombie_folders;
 
 echo "Commiting to git";
 git add .;
-git commit -am "Update from Joplin Export";
+git commit -am "${COMMIT_MESSAGE}";
